@@ -6,10 +6,9 @@
 #include <climits>
 #include <time.h>
 
-using namespace std;
-#include "grid.hpp"
 
 using namespace std;
+#include "grid.hpp"
 
 int const FLAT_SURFACE = 0;
 
@@ -346,14 +345,16 @@ void set_default_accumulation_values(grid &flow_grid, grid &g) {
 int main(int argc, char * argv[]) {
 
 	//read in command line arguments, checking for existence
-	if (argv[1] == NULL) {
-		cout << "Please enter a grid file name";
+	if (argv[1] == NULL || argv[2] == NULL || argv[3] == NULL) {
+		cout << "Please enter file names for input grid, output flow direction, and output flow accumulation";
 		exit(1);
 	} else {
 		cout << "You entered file name: " << argv[1] << endl;
 	}
 
 	string file_name = argv[1];
+	string output_flow_direction = argv[2];
+	string output_flow_accumulation = argv[3];
 
 	cout << file_name << endl;
 
@@ -380,17 +381,32 @@ int main(int argc, char * argv[]) {
 	//print_2d_array(grid_from_file);
 
 	calculate_flow_diretion(flow_direction, grid_from_file);
-	cout << "Here is the flow direction grid:" << endl;
-	//print_2d_array(flow_direction);
+	//write to file
+	ofstream flow_direction_file(output_flow_direction.c_str());
+	flow_direction_file << grid_from_file.header;
+	for(int i = 0; i < flow_direction.rows; i++) {
+		for (int j = 0; j < flow_direction.cols; j++) {
+			flow_direction_file << flow_direction.data[i][j] << " ";
+		}
+		flow_direction_file << "\n";
+	}
 
 	clock_t start = clock();
 	calculate_flow_accumulation(flow_accumulation, flow_direction);
-	cout << "Here is the flow accumulation grid:" << endl;
-	//print_2d_array(flow_accumulation);
 	clock_t end = clock();
 	clock_t ticks = end - start;
 	double duration = ticks / (double) CLOCKS_PER_SEC;
 	cout << "dynamic algorithm took: " << duration << " seconds" << endl;
+
+	//write to file
+	ofstream flow_accumulation_file(output_flow_accumulation.c_str());
+	flow_accumulation_file << grid_from_file.header;
+	for(int i = 0; i < flow_accumulation.rows; i++) {
+		for (int j = 0; j < flow_accumulation.cols; j++) {
+			flow_accumulation_file << flow_accumulation.data[i][j] << " ";
+		}
+		flow_accumulation_file << "\n";
+	}
 
 	//initialize new flow accumulation grid
 	grid flow_accumulation2;
@@ -401,8 +417,6 @@ int main(int argc, char * argv[]) {
 
 	start = clock();
 	calculate_flow_accumulation_slow_algorithm(flow_accumulation, flow_direction);
-	cout << "Here is the flow accumulation grid:" << endl;
-	//print_2d_array(flow_accumulation);
 	end = clock();
 	ticks = end - start;
 	duration = ticks / (double) CLOCKS_PER_SEC;
